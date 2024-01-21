@@ -1,0 +1,138 @@
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.*;
+
+public class CRUDApp extends JFrame {
+    private JTextField idField, nameField, ageField;
+    private JButton addButton, updateButton, deleteButton, loadButton;
+
+    public CRUDApp() {
+        super("CRUD App");
+
+        idField = new JTextField(10);
+        nameField = new JTextField(10);
+        ageField = new JTextField(10);
+
+        addButton = new JButton("Add");
+        updateButton = new JButton("Update");
+        deleteButton = new JButton("Delete");
+        loadButton = new JButton("Load");
+
+        addButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                addData();
+            }
+        });
+
+        updateButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                updateData();
+            }
+        });
+
+        deleteButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                deleteData();
+            }
+        });
+
+        loadButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                loadData();
+            }
+        });
+
+        setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+        add(new JLabel("ID:"));
+        add(idField);
+        add(new JLabel("Name:"));
+        add(nameField);
+        add(new JLabel("Age:"));
+        add(ageField);
+        add(addButton);
+        add(updateButton);
+        add(deleteButton);
+        add(loadButton);
+
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+    private Connection getConnection() throws SQLException {
+        String url = "jdbc:mysql://localhost:3306/your_database_name";
+        String username = "your_username";
+        String password = "your_password";
+        return DriverManager.getConnection(url, username, password);
+    }
+
+    private void addData() {
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO your_table_name (name, age) VALUES (?, ?)")) {
+
+            preparedStatement.setString(1, nameField.getText());
+            preparedStatement.setInt(2, Integer.parseInt(ageField.getText()));
+
+            preparedStatement.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Data added successfully!");
+        } catch (SQLException | NumberFormatException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error adding data!");
+        }
+    }
+
+    private void updateData() {
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("UPDATE your_table_name SET name=?, age=? WHERE id=?")) {
+
+            preparedStatement.setString(1, nameField.getText());
+            preparedStatement.setInt(2, Integer.parseInt(ageField.getText()));
+            preparedStatement.setInt(3, Integer.parseInt(idField.getText()));
+
+            preparedStatement.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Data updated successfully!");
+        } catch (SQLException | NumberFormatException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error updating data!");
+        }
+    }
+
+    private void deleteData() {
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM your_table_name WHERE id=?")) {
+
+            preparedStatement.setInt(1, Integer.parseInt(idField.getText()));
+
+            preparedStatement.executeUpdate();
+            JOptionPane.showMessageDialog(this, "Data deleted successfully!");
+        } catch (SQLException | NumberFormatException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error deleting data!");
+        }
+    }
+
+    private void loadData() {
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement("SELECT * FROM your_table_name WHERE id=?")) {
+
+            preparedStatement.setInt(1, Integer.parseInt(idField.getText()));
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()) {
+                nameField.setText(resultSet.getString("name"));
+                ageField.setText(String.valueOf(resultSet.getInt("age")));
+            } else {
+                JOptionPane.showMessageDialog(this, "Data not found!");
+            }
+        } catch (SQLException | NumberFormatException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error loading data!");
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new CRUDApp());
+    }
+}
